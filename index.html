@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Online Image Resizer & Cropper</title>
+  <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet" />
+  <style>
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+    /* Reset */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #2c3e50;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Header */
+    header {
+      background: #fff;
+      padding: 30px 50px;
+      box-shadow: 0 10px 30px rgba(103, 58, 183, 0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-bottom: 6px solid #5a4db1;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      transition: box-shadow 0.3s ease;
+    }
+
+    header:hover {
+      box-shadow: 0 15px 40px rgba(103, 58, 183, 0.25);
+    }
+
+    header h1 {
+      margin: 0 0 12px;
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: #5a4db1;
+      text-shadow: 1px 1px 4px rgba(90, 77, 177, 0.4);
+      letter-spacing: 1.1px;
+    }
+
+    nav {
+      display: flex;
+      gap: 35px;
+      flex-wrap: wrap;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    nav a {
+      color: #5a4db1;
+      text-decoration: none;
+      padding: 12px 25px;
+      border-radius: 40px;
+      background: #ede7f6;
+      box-shadow: 0 4px 8px rgba(90, 77, 177, 0.2);
+      transition: background-color 0.3s ease, transform 0.25s ease, box-shadow 0.3s ease;
+      user-select: none;
+    }
+
+    nav a:hover,
+    nav a:focus {
+      background-color: #5a4db1;
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(90, 77, 177, 0.5);
+      transform: translateY(-3px);
+      outline: none;
+    }
+
+    /* Main */
+    main {
+      flex: 1;
+      display: flex;
+      gap: 40px;
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      position: relative;
+      z-index: 10;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* Sidebar ad hidden on small screens */
+    #sidebar-ad {
+      display: none;
+      width: 320px;
+      height: 300px;
+      background: #f0e6ff;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(90, 77, 177, 0.1);
+      overflow: hidden;
+      transition: transform 0.4s ease;
+      will-change: transform;
+    }
+
+    @media (min-width: 900px) {
+      #sidebar-ad {
+        display: block;
+        align-self: flex-start;
+      }
+    }
+
+    /* Cropper Container */
+    #cropper-container {
+      flex: 1;
+      background: #ffffffcc;
+      padding: 40px 50px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(103, 58, 183, 0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 700px;
+      width: 100%;
+      backdrop-filter: saturate(180%) blur(20px);
+      transition: box-shadow 0.4s ease;
+    }
+
+    #cropper-container:hover {
+      box-shadow: 0 30px 60px rgba(103, 58, 183, 0.3);
+    }
+
+    /* File Input */
+    #input-image {
+      padding: 15px 18px;
+      border-radius: 14px;
+      border: 2px solid #5a4db1;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      max-width: 400px;
+      transition: border-color 0.3s ease;
+      background: #fafaff;
+      color: #5a4db1;
+      box-shadow: inset 0 0 12px #d7d2f0;
+    }
+
+    #input-image:hover,
+    #input-image:focus {
+      border-color: #764ba2;
+      outline: none;
+      box-shadow: 0 0 10px #764ba2aa;
+    }
+
+    /* Size inputs */
+    .size-inputs {
+      display: flex;
+      gap: 25px;
+      margin: 30px 0 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .size-inputs label {
+      flex: 1 1 150px;
+      font-weight: 600;
+      color: #5a4db1;
+      font-size: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .size-inputs input[type="number"] {
+      padding: 12px 15px;
+      border-radius: 12px;
+      border: 1.8px solid #ccc;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #5a4db1;
+      transition: border-color 0.3s ease;
+      background: #fefefe;
+      box-shadow: inset 0 0 8px #ded6fc;
+    }
+
+    .size-inputs input[type="number"]:focus {
+      border-color: #764ba2;
+      outline: none;
+      box-shadow: 0 0 12px #764ba2bb;
+    }
+
+    /* Image */
+    #image {
+      max-width: 100%;
+      max-height: 520px;
+      border-radius: 18px;
+      box-shadow: 0 15px 30px rgba(90, 77, 177, 0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: grab;
+    }
+
+    #image:active {
+      cursor: grabbing;
+    }
+
+    /* Download Button */
+    #download-btn {
+      background-color: #5a4db1;
+      color: #fff;
+      border: none;
+      padding: 16px 38px;
+      border-radius: 30px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 25px;
+      box-shadow: 0 12px 25px rgba(90, 77, 177, 0.4);
+      transition: background-color 0.3s ease, transform 0.25s ease, box-shadow 0.3s ease;
+      user-select: none;
+      align-self: center;
+      width: fit-content;
+      letter-spacing: 0.8px;
+    }
+
+    #download-btn:hover,
+    #download-btn:focus {
+      background-color: #3e3687;
+      box-shadow: 0 18px 38px rgba(62, 54, 135, 0.7);
+      transform: translateY(-3px);
+      outline: none;
+    }
+
+    /* Ads containers */
+    #banner-ad,
+    #inpage-ad {
+      margin-bottom: 30px;
+      width: 320px;
+      height: 250px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 28px rgba(90, 77, 177, 0.15);
+      margin-left: auto;
+      margin-right: auto;
+      background: #faf7ff;
+      transition: box-shadow 0.3s ease;
+    }
+
+    #banner-ad:hover,
+    #inpage-ad:hover {
+      box-shadow: 0 20px 48px rgba(90, 77, 177, 0.3);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 25px 15px;
+      background: #5a4db1;
+      color: #e6e1f5;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      user-select: none;
+      box-shadow: inset 0 4px 8px #764ba2;
+      transition: background-color 0.3s ease;
+    }
+
+    footer:hover {
+      background-color: #764ba2;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 480px) {
+      header h1 {
+        font-size: 2rem;
+      }
+
+      nav a {
+        padding: 10px 18px;
+        font-size: 0.95rem;
+      }
+
+      main {
+        padding: 30px 15px;
+      }
+
+      #cropper-container {
+        padding: 30px 25px;
+      }
+
+      .size-inputs {
+        gap: 15px;
+      }
+
+      .size-inputs label {
+        flex: 1 1 100%;
+      }
+
+      #banner-ad,
+      #inpage-ad {
+        width: 280px;
+        height: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div id="banner-ad">
+      <script type="text/javascript">
+        atOptions = {
+          'key': '5e73115f976cfb1873800960818eef50',
+          'format': 'iframe',
+          'height': 250,
+          'width': 300,
+          'params': {}
+        };
+      </script>
+      <script type="text/javascript" src="//www.highperformanceformat.com/5e73115f976cfb1873800960818eef50/invoke.js"></script>
+    </div>
+    <h1>Online Image Resizer &amp; Cropper</h1>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#">Resize</a>
+      <a href="#">Crop</a>
+      <a href="#">Convert</a>
+      <a href="#">Help</a>
+    </nav>
+  </header>
+
+  <main>
+    <aside id="sidebar-ad">
+      <script type="text/javascript">
+        atOptions = {
+          'key': '5e73115f976cfb1873800960818eef50',
+          'format': 'iframe',
+          'height': 250,
+          'width': 300,
+          'params': {}
+        };
+      </script>
+      <script type="text/javascript" src="//www.highperformanceformat.com/5e73115f976cfb1873800960818eef50/invoke.js"></script>
+    </aside>
+
+    <div id="cropper-container">
+      <input type="file" id="input-image" accept="image/*" />
+      <div class="size-inputs">
+        <label for="custom-width">Width:
+          <input type="number" id="custom-width" placeholder="Auto" min="1" />
+        </label>
+        <label for="custom-height">Height:
+          <input type="number" id="custom-height" placeholder="Auto" min="1" />
+        </label>
+      </div>
+      <img id="image" style="display: none;" alt="Uploaded Preview" />
+      <button id="download-btn" style="display:none;">Download Cropped Image</button>
+      <div id="inpage-ad">
+        <script type="text/javascript">
+          atOptions = {
+            'key': '5e73115f976cfb1873800960818eef50',
+            'format': 'iframe',
+            'height': 250,
+            'width': 300,
+            'params': {}
+          };
+        </script>
+        <script type="text/javascript" src="//www.highperformanceformat.com/5e73115f976cfb1873800960818eef50/invoke.js"></script>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 Online Image Resizer BY Sarid
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+  <script>
+    const inputImage = document.getElementById('input-image');
+    const image = document.getElementById('image');
+    const downloadBtn = document.getElementById('download-btn');
+    const customWidth = document.getElementById('custom-width');
+    const customHeight = document.getElementById('custom-height');
+    let cropper;
+
+    inputImage.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          image.src = e.target.result;
+          image.style.display = 'block';
+          if (cropper) cropper.destroy();
+          cropper = new Cropper(image, {
+            aspectRatio: NaN,
+            viewMode: 1,
+            autoCropArea: 0.8,
+            responsive: true,
+            background: true,
+            zoomOnWheel: true,
+            modal: true,
+            dragMode: 'move',
+          });
+          downloadBtn.style.display = 'inline-block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const width = parseInt(customWidth.value);
+      const height = parseInt(customHeight.value);
+
+      const canvas = cropper.getCroppedCanvas({
+        fillColor: '#fff',
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high',
+        width: isNaN(width) ? undefined : width,
+        height: isNaN(height) ? undefined : height,
+      });
+
+      if (!canvas) return;
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'resized-image.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    });
+
+    // Optional: periodically load a script for ads or tracking
+    setInterval(() => {
+      const script = document.createElement('script');
+      script.src = '//pl26906189.profitableratecpm.com/d2/bc/ed/d2bcede87bdaf5095ea8e4eba31658e8.js';
+      document.body.appendChild(script);
+    }, 15000);
+  </script>
+
+  <!-- Native Banner -->
+  <script async="async" data-cfasync="false" src="//pl26906243.profitableratecpm.com/998befcc16de57cbff30fbaf8a5f9e3e/invoke.js"></script>
+  <div id="container-998befcc16de57cbff30fbaf8a5f9e3e"></div>
+</body>
+</html>
